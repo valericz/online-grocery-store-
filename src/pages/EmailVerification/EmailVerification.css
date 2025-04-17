@@ -1,0 +1,112 @@
+.email-verification {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 50px 20px;
+    background-color: var(--secondary-color);
+}
+
+.verification-container {
+    background-color: var(--white);
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 500px;
+}
+
+.verification-container h2 {
+    font-size: 30px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-color);
+    text-align: center;
+}
+
+.verification-container p {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-light);
+}
+
+.verification-input {
+    margin-bottom: 20px;
+}
+
+.verification-input input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--light-color);
+    border-radius: var(--radius-md);
+    outline: none;
+    font-size: 16px;
+    transition: var(--transition-fast);
+}
+
+.verification-input input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.error-message {
+    color: var(--neutral-color);
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.success-message {
+    color: var(--primary-color);
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.verification-container button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    margin-bottom: 20px;
+}
+
+.verification-container button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.resend-code {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.resend-code span {
+    color: var(--primary-color);
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.resend-code span:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+@media (max-width: 750px) {
+    .email-verification {
+        padding: 20px;
+    }
+
+    .verification-container {
+        padding: 30px 20px;
+    }
+}

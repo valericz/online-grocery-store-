@@ -1,0 +1,221 @@
+.cart {
+    margin: 100px 0px;
+}
+
+.cart hr {
+    height: 1px;
+    background-color: var(--light-color);
+    border: none;
+}
+
+.cart-items-title {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr 1fr 1fr 0.5fr;
+    align-items: center;
+    color: var(--text-light);
+    font-size: max(1vw, 12px);
+}
+
+.cart-items-item {
+    margin: 10px 0px;
+    color: var(--text-color);
+}
+
+.cart-items-item img {
+    width: 50px;
+}
+
+.cart-items-item div {
+    max-width: 40px;
+    text-align: center;
+    padding: 8px 8px;
+    font-size: 12px;
+}
+
+.cart-items-remove-icon {
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.cart-items-remove-icon:hover {
+    color: #da9beb;
+}
+
+.cart-bottom {
+    margin-top: 80px;
+    display: flex;
+    justify-content: space-between;
+    gap: max(12vw, 20px);
+}
+
+.cart-total {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.cart-total-details {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-light);
+}
+
+.cart-total hr {
+    margin: 10px 0px;
+}
+
+.cart-total button {
+    border: none;
+    color: var(--white);
+    background-color: var(--primary-color);
+    width: max(15vw, 200px);
+    padding: 12px 0px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.cart-total button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.cart-total button:active {
+    transform: translateY(0);
+}
+
+.cart-promocode {
+    flex: 1;
+}
+
+.cart-promocode p {
+    color: var(--text-light);
+    margin-bottom: 10px;
+}
+
+.cart-promocode-input {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--secondary-color);
+    border-radius: var(--radius-md);
+    padding: 0;
+    border: 1px solid var(--light-color);
+}
+
+.cart-promocode-input input {
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 12px;
+    width: 100%;
+    color: var(--text-color);
+}
+
+.cart-promocode-input button {
+    width: max(10vw, 150px);
+    padding: 12px;
+    background-color: var(--primary-color);
+    border: none;
+    color: var(--white);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.cart-promocode-input button:hover {
+    background-color: var(--primary-dark);
+}
+
+.cart-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border: none !important;
+    padding: 0 !important;
+    max-width: none !important;
+}
+
+.cart-quantity-controls button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
+    line-height: 1;
+    margin: 0;
+}
+
+.cart-quantity-controls button:disabled {
+    background-color: var(--light-color);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.cart-quantity-controls button:hover:not(:disabled) {
+    background-color: var(--primary-color-dark);
+    transform: scale(1.1);
+}
+
+.cart-quantity-input-container {
+    position: relative;
+    border: none;
+    padding: 0;
+    max-width: none;
+}
+
+.cart-quantity-controls input {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--light-color);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    appearance: textfield;
+    -moz-appearance: textfield;
+    padding: 0;
+    margin: 0;
+}
+
+.cart-quantity-controls input::-webkit-outer-spin-button,
+.cart-quantity-controls input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-error {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    transform: none;
+    background-color: transparent;
+    color: #db7ef3a9;
+    font-size: 12px;
+    padding: 4px 8px;
+    white-space: nowrap;
+    z-index: 1;
+    border: none;
+}
+
+@media(max-width:750px) {
+    .cart-bottom {
+        flex-direction: column-reverse;
+    }
+
+    .cart-promocode {
+        justify-content: start;
+    }
+}

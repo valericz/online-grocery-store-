@@ -1,0 +1,230 @@
+.my-orders {
+    margin: 100px 50px;
+    max-width: 1440px;
+    margin: 100px auto;
+    padding: 0 50px;
+}
+
+.my-orders h2 {
+    font-size: 30px;
+    font-weight: 600;
+    margin-bottom: 30px;
+    color: var(--text-color);
+}
+
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.no-orders {
+    text-align: center;
+    font-size: 18px;
+    color: var(--text-light);
+    margin: 50px 0;
+    padding: 20px;
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.order-item {
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 20px;
+    transition: var(--transition-fast);
+}
+
+.order-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--light-color);
+}
+
+.order-id {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.order-date {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+.order-status-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.order-status {
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.order-status.pending {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.order-status.processing {
+    background-color: var(--primary-light);
+    color: var(--text-color);
+}
+
+.order-status.shipped {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+.order-status.delivered {
+    background-color: var(--accent-color);
+    color: var(--white);
+}
+
+.order-status.cancelled {
+    background-color: var(--neutral-color);
+    color: var(--white);
+}
+
+.status-select {
+    padding: 5px;
+    border: 1px solid var(--light-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--white);
+    color: var(--text-color);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.order-item-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--secondary-color);
+    border-radius: var(--radius-md);
+}
+
+.item-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.order-item-detail img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.item-name {
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+.item-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.item-quantity,
+.item-price,
+.item-total {
+    font-size: 14px;
+    color: var(--text-light);
+    margin: 2px 0;
+}
+
+.item-total {
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 20px;
+    border-top: 1px solid var(--light-color);
+}
+
+.order-total {
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+.total-amount {
+    font-weight: 600;
+    font-size: 18px;
+    margin-top: 10px;
+    color: var(--primary-color);
+}
+
+.order-delivery {
+    text-align: right;
+}
+
+.delivery-title {
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+.delivery-address,
+.delivery-contact,
+.delivery-email {
+    font-size: 14px;
+    color: var(--text-light);
+    margin: 2px 0;
+}
+
+@media (max-width: 750px) {
+    .my-orders {
+        margin: 100px 20px;
+        padding: 0 20px;
+    }
+
+    .order-footer {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .order-delivery {
+        text-align: left;
+    }
+
+    .item-right {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
+    }
+}

@@ -1,0 +1,17 @@
+.categories {
+    padding: 20px 50px;
+}
+
+.categories h1 {
+    font-size: max(2vw, 24px);
+    font-weight: 600;
+    margin-bottom: 30px;
+}
+
+.food-display-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 30px;
+    row-gap: 50px;
+}
