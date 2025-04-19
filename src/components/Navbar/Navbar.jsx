@@ -1,7 +1,7 @@
 import React, { useContext, useState, useRef, useEffect } from 'react'
 import './Navbar.css'
 import { assets } from '../../assets/assets'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { StoreContext } from '../../Context/StoreContext'
 
 const Navbar = ({ setShowLogin }) => {
@@ -10,6 +10,7 @@ const Navbar = ({ setShowLogin }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const { getTotalCartAmount, user, logout, isAdmin } = useContext(StoreContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -22,6 +23,21 @@ const Navbar = ({ setShowLogin }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    // Don't set menu highlight if we're on the cart page
+    if (location.pathname === '/cart') {
+      setMenu("");
+      return;
+    }
+
+    // Set menu highlight based on current path
+    const path = location.pathname;
+    if (path === '/') setMenu("home");
+    else if (path === '/menu') setMenu("menu");
+    else if (path === '/about') setMenu("about");
+    else if (path === '/contact') setMenu("contact");
+  }, [location.pathname]);
 
   const handleSearch = (e) => {
     e.preventDefault();
