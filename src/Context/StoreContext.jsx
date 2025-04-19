@@ -221,6 +221,11 @@ const StoreContextProvider = (props) => {
         return true;
     };
 
+    const clearCart = () => {
+        setCartItems({});
+        localStorage.removeItem('cartItems');
+    };
+
     const contextValue = {
         food_list,
         menu_list,
@@ -238,7 +243,8 @@ const StoreContextProvider = (props) => {
         getOrders,
         updateOrderStatus,
         MAX_QUANTITY,
-        validateQuantity
+        validateQuantity,
+        clearCart
     };
 
     return (

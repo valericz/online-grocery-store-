@@ -10,7 +10,9 @@ const Cart = () => {
   const [quantityErrors, setQuantityErrors] = useState({});
   const [inputValues, setInputValues] = useState({});
   const [removeConfirmations, setRemoveConfirmations] = useState({});
+  const [clearCartConfirmation, setClearCartConfirmation] = useState(false);
   const confirmationTimers = useRef({});
+  const clearCartTimer = useRef(null);
 
   const removeItemCompletely = (itemId) => {
     // Remove the item completely by calling removeFromCart for each quantity
@@ -186,16 +188,28 @@ const Cart = () => {
     }
   };
 
+  const handleClearCart = () => {
+    clearCart();
+    setClearCartConfirmation(false);
+    if (clearCartTimer.current) {
+      clearTimeout(clearCartTimer.current);
+    }
+  };
+
   return (
     <div className='cart'>
       <div className="cart-items">
         <div className="cart-header">
           <h2>Shopping Cart</h2>
-          {Object.keys(cartItems).length > 0 && (
-            <button className="clear-cart" onClick={clearCart}>
-              Clear Cart
-            </button>
-          )}
+        </div>
+        <div className="clear-button-container">
+          <button
+            className={Object.keys(cartItems).length === 0 ? "disabled" : ""}
+            disabled={Object.keys(cartItems).length === 0}
+            onClick={handleClearCart}
+          >
+            CLEAR
+          </button>
         </div>
         <div className="cart-items-title">
           <p>Items</p> <p>Title</p> <p>Price</p> <p>Quantity</p> <p>Total</p> <p>Remove</p>
