@@ -1,8 +1,18 @@
-# React + Vite
+# MERN Stack Grocery Shop Project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack web application built using the **MERN** stack: **MongoDB**, **Express**, **React**, and **Node.js**. This project demonstrates a modern web app with full CRUD functionality and seamless integration between front-end and back-end.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- User-friendly interface built with React
+- RESTful API built with Express and Node.js
+- MongoDB for efficient document-based data storage
+- Fully functional CRUD operations
+- Responsive UI design
+
+## Tech Stack
+
+- **Frontend:** React, React Router, Axios, TailwindCSS (optional)
+- **Backend:** Node.js, Express
+- **Database:** MongoDB (with Mongoose)
+- **Tools:** Vite, Nodemon, concurrently
