@@ -16,11 +16,11 @@ const productSchema = mongoose.Schema({
     },
     imageUrl: {
         type: String,
-        required: true,
+        required: true
     },
     category: {
         type: String,
-        required: true,
+        required: true
     },
     countInStock: {
         type: Number,
