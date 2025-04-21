@@ -17,6 +17,7 @@ const PlaceOrder = () => {
     });
 
     const [errors, setErrors] = useState({});
+    const [stockError, setStockError] = useState("");
     const { getTotalCartAmount, placeOrder } = useContext(StoreContext);
     const navigate = useNavigate();
 
@@ -95,8 +96,16 @@ const PlaceOrder = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
-            placeOrder(data);
-            navigate('/order-confirmation');
+            // 尝试下单并处理库存错误
+            const result = placeOrder(data);
+            if (result.success) {
+                navigate('/order-confirmation');
+            } else {
+                // 显示库存错误
+                setStockError(result.message);
+                // 滚动到页面顶部显示错误
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
     };
 
@@ -108,6 +117,11 @@ const PlaceOrder = () => {
 
     return (
         <div className='place-order'>
+            {stockError && (
+                <div className="stock-error-message">
+                    <p>{stockError}</p>
+                </div>
+            )}
             <div className="place-order-left">
                 <p className='title'>Delivery Information</p>
                 <form onSubmit={handleSubmit}>

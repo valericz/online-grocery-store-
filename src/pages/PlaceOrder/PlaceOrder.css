@@ -181,3 +181,19 @@
         margin-bottom: 30px;
     }
 }
+
+.stock-error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    margin: 0 auto 20px;
+    border-radius: 5px;
+    max-width: 90%;
+    text-align: center;
+    font-weight: 500;
+    border: 1px solid #f5c6cb;
+}
+
+.stock-error-message p {
+    margin: 0;
+}

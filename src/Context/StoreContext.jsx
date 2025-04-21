@@ -93,15 +93,32 @@ const StoreContextProvider = (props) => {
     };
 
     const addToCart = (itemId) => {
+        // 检查是否超过最大允许数量
         if (!validateQuantity(itemId)) {
             return false;
         }
+
+        // 查找商品
         const item = products.find(item => item._id === itemId);
-        if (item && item.isInStock) {
-            setCartItems((prev) => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }));
-            return true;
+
+        // 检查商品是否存在且有库存
+        if (!item || !item.isInStock) {
+            return false;
         }
-        return false;
+
+        // 计算新的购物车数量
+        const currentQuantity = cartItems[itemId] || 0;
+        const newQuantity = currentQuantity + 1;
+
+        // 检查库存是否足够
+        if (newQuantity > item.countInStock) {
+            console.log(`库存不足: 当前库存 ${item.countInStock}, 尝试添加到 ${newQuantity}`);
+            return false;
+        }
+
+        // 更新购物车
+        setCartItems((prev) => ({ ...prev, [itemId]: newQuantity }));
+        return true;
     };
 
     const removeFromCart = (itemId) => {
@@ -211,16 +228,37 @@ const StoreContextProvider = (props) => {
         const orderItems = [];
         let totalAmount = 0;
 
-        // Check if all items are still in stock
+        // 检查所有商品库存是否足够
         for (const itemId in cartItems) {
             const item = products.find(item => item._id === itemId);
+
+            // 检查商品是否存在且有库存
             if (!item || !item.isInStock) {
-                return { success: false, message: "Some items are no longer in stock" };
+                return {
+                    success: false,
+                    message: `商品不存在或已下架`
+                };
             }
+
+            // 检查库存数量是否足够
+            if (cartItems[itemId] > item.countInStock) {
+                return {
+                    success: false,
+                    message: `商品"${item.name}"库存不足，当前库存: ${item.countInStock}, 购物车数量: ${cartItems[itemId]}`
+                };
+            }
+
+            // 转换API属性名为前端期望的格式
             orderItems.push({
-                ...item,
+                food_id: item._id,
+                food_name: item.name,
+                food_price: item.price,
+                food_image: item.imageUrl,
+                food_desc: item.description,
+                in_stock: item.isInStock,
                 quantity: cartItems[itemId]
             });
+
             totalAmount += item.price * cartItems[itemId];
         }
 
