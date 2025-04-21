@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const MAX_QUANTITY = 10;
-  const { cartItems, food_list, removeFromCart, getTotalCartAmount, addToCart, clearCart } = useContext(StoreContext);
+  const { cartItems, products, removeFromCart, getTotalCartAmount, addToCart, clearCart, loading, error } = useContext(StoreContext);
   const navigate = useNavigate();
   const [quantityErrors, setQuantityErrors] = useState({});
   const [inputValues, setInputValues] = useState({});
@@ -13,6 +13,10 @@ const Cart = () => {
   const [clearCartConfirmation, setClearCartConfirmation] = useState(false);
   const confirmationTimers = useRef({});
   const clearCartTimer = useRef(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   const removeItemCompletely = (itemId) => {
     // Remove the item completely by calling removeFromCart for each quantity
@@ -196,6 +200,26 @@ const Cart = () => {
     }
   };
 
+  const handleCheckout = () => {
+    // 检查购物车是否为空
+    if (Object.keys(cartItems).length === 0) {
+      setErrorMessage('Your cart is empty');
+      return;
+    }
+
+    // 检查所有商品是否还有库存
+    for (const itemId in cartItems) {
+      const item = products.find(product => product._id === itemId);
+      if (!item || !item.isInStock) {
+        setErrorMessage('Some items are no longer in stock');
+        return;
+      }
+    }
+
+    // 如果所有检查都通过，跳转到结账页面
+    navigate('/order');
+  };
+
   return (
     <div className='cart'>
       <div className="cart-items">
@@ -216,36 +240,36 @@ const Cart = () => {
         </div>
         <br />
         <hr />
-        {food_list.map((item, index) => {
-          if (cartItems[item.food_id] > 0) {
-            return (<div key={index}>
+        {products.map((item, index) => {
+          if (cartItems[item._id] > 0) {
+            return (<div key={item._id}>
               <div className="cart-items-title cart-items-item">
-                <img src={item.food_image} alt="" />
-                <p>{item.food_name}</p>
-                <p>${item.food_price.toFixed(2)}</p>
+                <img src={item.imageUrl} alt="" />
+                <p>{item.name}</p>
+                <p>${item.price}</p>
                 <div className="cart-quantity-controls">
-                  <button onClick={() => handleRemoveFromCart(item.food_id)}>-</button>
+                  <button onClick={() => handleRemoveFromCart(item._id)}>-</button>
                   <div className="cart-quantity-input-container">
                     <input
                       type="number"
-                      value={inputValues[item.food_id] ?? cartItems[item.food_id]}
-                      onChange={(e) => handleQuantityChange(item.food_id, e.target.value)}
-                      onBlur={() => handleInputBlur(item.food_id)}
-                      onKeyDown={(e) => handleKeyDown(e, item.food_id)}
+                      value={inputValues[item._id] ?? cartItems[item._id]}
+                      onChange={(e) => handleQuantityChange(item._id, e.target.value)}
+                      onBlur={() => handleInputBlur(item._id)}
+                      onKeyDown={(e) => handleKeyDown(e, item._id)}
                       min="1"
                       max={MAX_QUANTITY}
                     />
-                    {quantityErrors[item.food_id] &&
-                      <div className="quantity-error">{quantityErrors[item.food_id]}</div>
+                    {quantityErrors[item._id] &&
+                      <div className="quantity-error">{quantityErrors[item._id]}</div>
                     }
                   </div>
                   <button
-                    onClick={() => handleAddToCart(item.food_id)}
-                    disabled={cartItems[item.food_id] >= MAX_QUANTITY}
+                    onClick={() => handleAddToCart(item._id)}
+                    disabled={cartItems[item._id] >= MAX_QUANTITY}
                   >+</button>
                 </div>
-                <p>${(item.food_price * cartItems[item.food_id]).toFixed(2)}</p>
-                <p className='cart-items-remove-icon' onClick={() => removeItemCompletely(item.food_id)}>x</p>
+                <p>${(item.price * cartItems[item._id]).toFixed(2)}</p>
+                <p className='cart-items-remove-icon' onClick={() => removeItemCompletely(item._id)}>x</p>
               </div>
               <hr />
             </div>)
@@ -263,10 +287,11 @@ const Cart = () => {
             <hr />
             <div className="cart-total-details"><b>Total</b><b>${(Math.round((getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 5) * 100) / 100).toFixed(2)}</b></div>
           </div>
+          {errorMessage && <p className="error-message">{errorMessage}</p>}
           <button
             className={getTotalCartAmount() === 0 ? "disabled" : ""}
             disabled={getTotalCartAmount() === 0}
-            onClick={() => navigate('/order')}
+            onClick={handleCheckout}
           >
             PROCEED TO CHECKOUT
           </button>

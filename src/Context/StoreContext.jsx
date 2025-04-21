@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import { food_list, menu_list } from "../assets/assets";
+import { menu_list } from "../assets/assets";
 
 export const StoreContext = createContext(null);
 
@@ -17,7 +17,45 @@ const StoreContextProvider = (props) => {
     const [user, setUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [userCredentials, setUserCredentials] = useState([]);
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const MAX_QUANTITY = 10;
+
+    // Fetch products from API
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                console.log('Fetching products from API...');
+                const response = await fetch('http://localhost:3000/api/products');
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    console.error('Response not OK:', errorData || response.statusText);
+                    throw new Error(
+                        errorData?.message ||
+                        `Failed to fetch products: ${response.status} ${response.statusText}`
+                    );
+                }
+
+                const data = await response.json();
+                console.log('Products fetched successfully:', data.length || 0, 'items');
+                setProducts(data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                setError(error.message);
+                setLoading(false);
+
+                // Fallback to static data if available
+                // If you have static data as backup, you can use it here
+            }
+        };
+
+        fetchProducts();
+    }, []);
 
     // Load cart items, orders, and user credentials from localStorage on component mount
     useEffect(() => {
@@ -58,8 +96,8 @@ const StoreContextProvider = (props) => {
         if (!validateQuantity(itemId)) {
             return false;
         }
-        const item = food_list.find(item => item.food_id === itemId);
-        if (item && item.in_stock) {
+        const item = products.find(item => item._id === itemId);
+        if (item && item.isInStock) {
             setCartItems((prev) => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }));
             return true;
         }
@@ -83,9 +121,9 @@ const StoreContextProvider = (props) => {
         let totalAmount = 0;
         for (const item in cartItems) {
             if (cartItems[item] > 0) {
-                let itemInfo = food_list.find((product) => product.food_id === Number(item));
-                if (itemInfo && itemInfo.in_stock) {
-                    totalAmount += itemInfo.food_price * cartItems[item];
+                let itemInfo = products.find((product) => product._id === item);
+                if (itemInfo && itemInfo.isInStock) {
+                    totalAmount += itemInfo.price * cartItems[item];
                 }
             }
         }
@@ -175,15 +213,15 @@ const StoreContextProvider = (props) => {
 
         // Check if all items are still in stock
         for (const itemId in cartItems) {
-            const item = food_list.find(item => item.food_id === Number(itemId));
-            if (!item || !item.in_stock) {
+            const item = products.find(item => item._id === Number(itemId));
+            if (!item || !item.isInStock) {
                 return { success: false, message: "Some items are no longer in stock" };
             }
             orderItems.push({
                 ...item,
                 quantity: cartItems[itemId]
             });
-            totalAmount += item.food_price * cartItems[itemId];
+            totalAmount += item.price * cartItems[itemId];
         }
 
         // Create the order object
@@ -235,7 +273,7 @@ const StoreContextProvider = (props) => {
     };
 
     const contextValue = {
-        food_list,
+        products,
         menu_list,
         cartItems,
         addToCart,
@@ -252,7 +290,9 @@ const StoreContextProvider = (props) => {
         updateOrderStatus,
         MAX_QUANTITY,
         validateQuantity,
-        clearCart
+        clearCart,
+        loading,
+        error
     };
 
     return (
