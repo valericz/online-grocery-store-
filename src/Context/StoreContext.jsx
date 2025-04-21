@@ -213,7 +213,7 @@ const StoreContextProvider = (props) => {
 
         // Check if all items are still in stock
         for (const itemId in cartItems) {
-            const item = products.find(item => item._id === Number(itemId));
+            const item = products.find(item => item._id === itemId);
             if (!item || !item.isInStock) {
                 return { success: false, message: "Some items are no longer in stock" };
             }
