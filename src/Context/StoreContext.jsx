@@ -59,7 +59,7 @@ const StoreContextProvider = (props) => {
             return false;
         }
         const item = food_list.find(item => item.food_id === itemId);
-        if (item && item.in_stock && item.quantity > 0) {
+        if (item && item.in_stock) {
             setCartItems((prev) => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }));
             return true;
         }
@@ -67,8 +67,16 @@ const StoreContextProvider = (props) => {
     };
 
     const removeFromCart = (itemId) => {
-        if (cartItems[itemId] === 0) return;
-        setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
+        if (!cartItems[itemId]) return;
+        setCartItems((prev) => {
+            const newQuantity = prev[itemId] - 1;
+            if (newQuantity <= 0) {
+                const newCart = { ...prev };
+                delete newCart[itemId];
+                return newCart;
+            }
+            return { ...prev, [itemId]: newQuantity };
+        });
     };
 
     const getTotalCartAmount = () => {
