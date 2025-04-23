@@ -22,6 +22,17 @@ const StoreContextProvider = (props) => {
     const [error, setError] = useState(null);
     const MAX_QUANTITY = 10;
 
+    // 动态加载图片的工具函数
+    const getProductImage = (imageUrl) => {
+        if (!imageUrl) return null;
+
+        // 如果是完整URL，直接返回
+        if (imageUrl.startsWith('http')) return imageUrl;
+
+        // 使用public文件夹中的图片
+        return `/images/${imageUrl}`;
+    };
+
     // Fetch products from API
     useEffect(() => {
         const fetchProducts = async () => {
@@ -93,31 +104,23 @@ const StoreContextProvider = (props) => {
     };
 
     const addToCart = (itemId) => {
-        // 检查是否超过最大允许数量
         if (!validateQuantity(itemId)) {
             return false;
         }
-
-        // 查找商品
         const item = products.find(item => item._id === itemId);
-
-        // 检查商品是否存在且有库存
-        if (!item || !item.isInStock) {
+        if (!item) {
+            console.error('Tried to add non-existent item to cart:', itemId);
             return false;
         }
 
-        // 计算新的购物车数量
-        const currentQuantity = cartItems[itemId] || 0;
-        const newQuantity = currentQuantity + 1;
-
-        // 检查库存是否足够
-        if (newQuantity > item.countInStock) {
-            console.log(`库存不足: 当前库存 ${item.countInStock}, 尝试添加到 ${newQuantity}`);
+        if (!item.isInStock) {
+            // Item is out of stock, can't add to cart
+            console.warn('Attempted to add out-of-stock item to cart:', item.name);
+            // You could show a toast notification here if you want
             return false;
         }
 
-        // 更新购物车
-        setCartItems((prev) => ({ ...prev, [itemId]: newQuantity }));
+        setCartItems((prev) => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }));
         return true;
     };
 
@@ -224,85 +227,198 @@ const StoreContextProvider = (props) => {
         setIsAdmin(false);
     };
 
-    const placeOrder = (deliveryData) => {
+    const placeOrder = async (deliveryData) => {
         const orderItems = [];
         let totalAmount = 0;
 
-        // 检查所有商品库存是否足够
+        // Check if all items are still in stock
+        const outOfStockItems = [];
+        const insufficientStockItems = [];
+
         for (const itemId in cartItems) {
             const item = products.find(item => item._id === itemId);
-
-            // 检查商品是否存在且有库存
             if (!item || !item.isInStock) {
-                return {
-                    success: false,
-                    message: `商品不存在或已下架`
-                };
+                outOfStockItems.push(item ? item.name : 'Unknown item');
+            } else if (item.countInStock < cartItems[itemId]) {
+                // Check if requested quantity exceeds available stock
+                insufficientStockItems.push({
+                    name: item.name,
+                    requested: cartItems[itemId],
+                    available: item.countInStock
+                });
+            } else {
+                orderItems.push({
+                    food_id: item._id,
+                    name: item.name,
+                    imageUrl: item.imageUrl,
+                    price: item.price,
+                    quantity: cartItems[itemId],
+                    category: item.category
+                });
+                totalAmount += item.price * cartItems[itemId];
             }
+        }
 
-            // 检查库存数量是否足够
-            if (cartItems[itemId] > item.countInStock) {
-                return {
-                    success: false,
-                    message: `商品"${item.name}"库存不足，当前库存: ${item.countInStock}, 购物车数量: ${cartItems[itemId]}`
-                };
-            }
+        if (outOfStockItems.length > 0) {
+            return {
+                success: false,
+                message: `The following items are out of stock: ${outOfStockItems.join(', ')}`,
+                outOfStockItems
+            };
+        }
 
-            // 转换API属性名为前端期望的格式
-            orderItems.push({
-                food_id: item._id,
-                food_name: item.name,
-                food_price: item.price,
-                food_image: item.imageUrl,
-                food_desc: item.description,
-                in_stock: item.isInStock,
-                quantity: cartItems[itemId]
+        if (insufficientStockItems.length > 0) {
+            const itemsMessage = insufficientStockItems.map(item =>
+                `${item.name} (requested: ${item.requested}, available: ${item.available})`
+            ).join(', ');
+
+            return {
+                success: false,
+                message: `Insufficient stock for: ${itemsMessage}`,
+                insufficientStockItems
+            };
+        }
+
+        // Total amount includes delivery fee
+        const finalTotalAmount = totalAmount + 5;
+
+        try {
+            // Create order in backend
+            const response = await fetch('http://localhost:3000/api/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    items: orderItems,
+                    deliveryData,
+                    totalAmount: finalTotalAmount
+                }),
             });
 
-            totalAmount += item.price * cartItems[itemId];
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                // Check if the error is due to insufficient stock
+                if (responseData.insufficientItems && responseData.insufficientItems.length > 0) {
+                    const itemNames = responseData.insufficientItems.map(item =>
+                        `${item.name} (requested: ${item.requested}, available: ${item.available})`
+                    ).join(', ');
+
+                    return {
+                        success: false,
+                        message: `Insufficient stock for: ${itemNames}`,
+                        insufficientStockItems: responseData.insufficientItems
+                    };
+                }
+
+                throw new Error(responseData.message || 'Failed to create order');
+            }
+
+            // Create a frontend order object with the backend order data
+            const order = {
+                id: responseData.order._id,
+                items: orderItems,
+                totalAmount: finalTotalAmount, // Including delivery fee
+                deliveryData,
+                date: responseData.order.date,
+                status: responseData.order.status,
+                userEmail: user?.email // Use the logged-in user's email
+            };
+
+            // Add the order to ordersData (for display in frontend)
+            setOrdersData(prev => {
+                const newOrders = [...prev, order];
+                // Save to localStorage immediately
+                localStorage.setItem('ordersData', JSON.stringify(newOrders));
+                return newOrders;
+            });
+
+            // Refresh products data to reflect the new stock quantities
+            const productsResponse = await fetch('http://localhost:3000/api/products');
+            if (productsResponse.ok) {
+                const updatedProducts = await productsResponse.json();
+                setProducts(updatedProducts);
+            }
+
+            // Clear the cart
+            setCartItems({});
+            localStorage.removeItem('cartItems');
+
+            return { success: true, order };
+        } catch (error) {
+            console.error('Order placement error:', error);
+            return { success: false, message: error.message || 'Failed to place order' };
         }
-
-        // Create the order object
-        const order = {
-            id: Date.now(),
-            items: orderItems,
-            totalAmount: totalAmount + 5, // Including delivery fee
-            deliveryData,
-            date: new Date().toISOString(),
-            status: 'pending',
-            userEmail: user?.email // Use the logged-in user's email
-        };
-
-        // Add the order to ordersData
-        setOrdersData(prev => {
-            const newOrders = [...prev, order];
-            // Save to localStorage immediately
-            localStorage.setItem('ordersData', JSON.stringify(newOrders));
-            return newOrders;
-        });
-
-        // Clear the cart
-        setCartItems({});
-        localStorage.removeItem('cartItems');
-
-        return { success: true, order };
     };
 
-    const getOrders = () => {
-        if (isAdmin) {
-            return ordersData;
+    const getOrders = async () => {
+        try {
+            // Fetch orders from backend
+            const response = await fetch('http://localhost:3000/api/orders');
+            if (!response.ok) {
+                throw new Error('Failed to fetch orders');
+            }
+
+            const backendOrders = await response.json();
+
+            // Map backend orders to frontend format
+            const formattedOrders = backendOrders.map(order => ({
+                id: order._id,
+                items: order.items,
+                totalAmount: order.totalAmount,
+                deliveryData: order.deliveryData,
+                date: order.date,
+                status: order.status,
+                userEmail: user?.email // Assuming this for now
+            }));
+
+            // Update local orders state
+            setOrdersData(formattedOrders);
+
+            // Return the orders (filtered by user if not admin)
+            if (isAdmin) {
+                return formattedOrders;
+            }
+            // Filter orders for current user
+            return formattedOrders.filter(order => order.userEmail === user?.email);
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            // Fallback to local storage orders
+            if (isAdmin) {
+                return ordersData;
+            }
+            return ordersData.filter(order => order.userEmail === user?.email);
         }
-        // Filter orders for the current user
-        return ordersData.filter(order => order.userEmail === user?.email);
     };
 
-    const updateOrderStatus = (orderId, newStatus) => {
+    const updateOrderStatus = async (orderId, newStatus) => {
         if (!isAdmin) return false;
 
-        setOrdersData(prev => prev.map(order =>
-            order.id === orderId ? { ...order, status: newStatus } : order
-        ));
-        return true;
+        try {
+            // Call backend API to update order status
+            const response = await fetch(`http://localhost:3000/api/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update order status');
+            }
+
+            // If successful, update local state
+            setOrdersData(prev => prev.map(order =>
+                order.id === orderId ? { ...order, status: newStatus } : order
+            ));
+
+            return true;
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            return false;
+        }
     };
 
     const clearCart = () => {
@@ -330,7 +446,8 @@ const StoreContextProvider = (props) => {
         validateQuantity,
         clearCart,
         loading,
-        error
+        error,
+        getProductImage
     };
 
     return (

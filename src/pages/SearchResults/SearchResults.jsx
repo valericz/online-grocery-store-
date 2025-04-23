@@ -21,6 +21,7 @@ const SearchResults = () => {
             setSearchResults([]);
         }
     }, [query, food_list]);
+    // 少糖ni 小汤sayhi
 
     return (
         <div className='search-results'>

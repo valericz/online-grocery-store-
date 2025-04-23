@@ -1,16 +1,50 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import './MyOrders.css'
 import { StoreContext } from '../../Context/StoreContext'
 
 const MyOrders = () => {
-  const { getOrders, user, isAdmin, updateOrderStatus } = useContext(StoreContext);
-  const orders = getOrders();
+  const { getOrders, user, isAdmin, updateOrderStatus, getProductImage } = useContext(StoreContext);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleStatusChange = (orderId, newStatus) => {
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const ordersData = await getOrders();
+        setOrders(ordersData);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  const handleStatusChange = async (orderId, newStatus) => {
     if (isAdmin) {
-      updateOrderStatus(orderId, newStatus);
+      const success = await updateOrderStatus(orderId, newStatus);
+      if (success) {
+        // Refresh orders after status update
+        const updatedOrders = await getOrders();
+        setOrders(updatedOrders);
+      }
     }
   };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-AU', {
+      style: 'currency',
+      currency: 'AUD',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  if (loading) {
+    return <div className="loading">Loading orders...</div>;
+  }
 
   return (
     <div className='my-orders'>
@@ -45,35 +79,72 @@ const MyOrders = () => {
                   )}
                 </div>
               </div>
-              <div className="order-items">
-                {order.items.map((item) => (
-                  <div key={item.food_id} className="order-item-detail">
-                    <div className="item-left">
-                      <img src={item.food_image} alt={item.food_name} />
-                      <div>
-                        <p className="item-name">{item.food_name}</p>
-                      </div>
-                    </div>
-                    <div className="item-right">
-                      <p className="item-quantity">Quantity: {item.quantity}</p>
-                      <p className="item-price">Price: ${item.food_price}</p>
-                      <p className="item-total">Total: ${(item.food_price * item.quantity).toFixed(2)}</p>
-                    </div>
-                  </div>
-                ))}
+
+              {/* Order Items Table */}
+              <div className="order-items-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Quantity</th>
+                      <th>Price</th>
+                      <th>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {order.items.map((item) => (
+                      <tr key={item.food_id || item._id}>
+                        <td className="item-info">
+                          <div className="item-image">
+                            <img src={getProductImage(item.food_image || item.imageUrl)} alt={item.food_name || item.name} />
+                          </div>
+                          <div className="item-details">
+                            <p className="item-name">{item.food_name || item.name}</p>
+                            <p className="item-category">{item.food_category || item.category}</p>
+                          </div>
+                        </td>
+                        <td className="item-quantity" data-label="Quantity">
+                          {item.quantity}
+                        </td>
+                        <td className="item-price" data-label="Price">
+                          {formatCurrency(item.food_price || item.price)}
+                        </td>
+                        <td className="item-subtotal" data-label="Subtotal">
+                          {formatCurrency((item.food_price || item.price) * item.quantity)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+
+              {/* Order Summary */}
               <div className="order-footer">
                 <div className="order-total">
-                  <p>Subtotal: ${(order.totalAmount - 5).toFixed(2)}</p>
-                  <p>Delivery Fee: $5.00</p>
-                  <p className="total-amount">Total Amount: ${order.totalAmount.toFixed(2)}</p>
+                  <div className="order-summary-table">
+                    <div className="summary-row">
+                      <span>Subtotal:</span>
+                      <span>{formatCurrency(order.totalAmount - 5)}</span>
+                    </div>
+                    <div className="summary-row">
+                      <span>Delivery Fee:</span>
+                      <span>{formatCurrency(5)}</span>
+                    </div>
+                    <div className="summary-row total">
+                      <span>Total:</span>
+                      <span>{formatCurrency(order.totalAmount)}</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="order-delivery">
-                  <p className="delivery-title">Delivery Information</p>
-                  <p className="delivery-address">
-                    {order.deliveryData.street}, {order.deliveryData.city}, {order.deliveryData.state} {order.deliveryData.postcode}
+                  <h3 className="delivery-title">Delivery Information</h3>
+                  <p className="delivery-name">
+                    Recipient: {order.deliveryData.firstName} {order.deliveryData.lastName}
                   </p>
-                  <p className="delivery-contact">Contact: {order.deliveryData.phone}</p>
+                  <p className="delivery-address">
+                    Address: {order.deliveryData.street}, {order.deliveryData.city}, {order.deliveryData.state} {order.deliveryData.postcode}
+                  </p>
+                  <p className="delivery-contact">Phone: {order.deliveryData.phone}</p>
                   <p className="delivery-email">Email: {order.deliveryData.email}</p>
                 </div>
               </div>

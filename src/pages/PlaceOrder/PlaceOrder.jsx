@@ -17,7 +17,7 @@ const PlaceOrder = () => {
     });
 
     const [errors, setErrors] = useState({});
-    const [stockError, setStockError] = useState("");
+    const [orderError, setOrderError] = useState('');
     const { getTotalCartAmount, placeOrder } = useContext(StoreContext);
     const navigate = useNavigate();
 
@@ -93,18 +93,38 @@ const PlaceOrder = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setOrderError(''); // Clear previous error
+
         if (validateForm()) {
-            // 尝试下单并处理库存错误
-            const result = placeOrder(data);
-            if (result.success) {
-                navigate('/order-confirmation');
-            } else {
-                // 显示库存错误
-                setStockError(result.message);
-                // 滚动到页面顶部显示错误
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            try {
+                // Wait for order placement completion
+                const result = await placeOrder(data);
+                if (result.success) {
+                    // Only navigate on successful order
+                    navigate('/order-confirmation');
+                } else {
+                    // Display error message
+                    setOrderError(result.message || 'Failed to place order');
+
+                    // If out of stock error, offer to redirect to shop
+                    if (result.outOfStockItems && result.outOfStockItems.length > 0) {
+                        if (window.confirm('Would you like to go back to the shop to update your cart?')) {
+                            navigate('/menu/popular');
+                        }
+                    }
+
+                    // If insufficient stock error, offer to go back to cart
+                    if (result.message && result.message.includes('Insufficient stock for:')) {
+                        if (window.confirm('Would you like to go back to the cart to update quantities?')) {
+                            navigate('/cart');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Order placement error:', error);
+                setOrderError('An error occurred while placing your order');
             }
         }
     };
@@ -117,13 +137,13 @@ const PlaceOrder = () => {
 
     return (
         <div className='place-order'>
-            {stockError && (
-                <div className="stock-error-message">
-                    <p>{stockError}</p>
-                </div>
-            )}
             <div className="place-order-left">
                 <p className='title'>Delivery Information</p>
+                {orderError && (
+                    <div className="order-error" style={{ color: 'red', margin: '10px 0', padding: '10px', border: '1px solid red', borderRadius: '4px', backgroundColor: 'rgba(255,0,0,0.05)' }}>
+                        {orderError}
+                    </div>
+                )}
                 <form onSubmit={handleSubmit}>
                     <div className="multi-field">
                         <div className="field">

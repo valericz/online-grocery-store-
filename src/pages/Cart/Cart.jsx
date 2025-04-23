@@ -1,11 +1,11 @@
-import React, { useContext, useState, useRef } from 'react'
+import React, { useContext, useState, useRef, useEffect } from 'react'
 import './Cart.css'
 import { StoreContext } from '../../Context/StoreContext'
 import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const MAX_QUANTITY = 10;
-  const { cartItems, products, removeFromCart, getTotalCartAmount, addToCart, clearCart, loading, error } = useContext(StoreContext);
+  const { cartItems, products, removeFromCart, getTotalCartAmount, addToCart, clearCart, loading, error, getProductImage } = useContext(StoreContext);
   const navigate = useNavigate();
   const [quantityErrors, setQuantityErrors] = useState({});
   const [inputValues, setInputValues] = useState({});
@@ -14,6 +14,26 @@ const Cart = () => {
   const confirmationTimers = useRef({});
   const clearCartTimer = useRef(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [outOfStockItems, setOutOfStockItems] = useState([]);
+
+  useEffect(() => {
+    // Check if any items in the cart are out of stock
+    if (products && products.length > 0) {
+      const stockCheck = Object.keys(cartItems).filter(itemId => {
+        const item = products.find(product => product._id === itemId);
+        return !item || !item.isInStock;
+      });
+
+      setOutOfStockItems(stockCheck);
+
+      // Show error message if there are out-of-stock items
+      if (stockCheck.length > 0) {
+        setErrorMessage('Some items in your cart are out of stock');
+      } else {
+        setErrorMessage('');
+      }
+    }
+  }, [cartItems, products]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -208,12 +228,48 @@ const Cart = () => {
     }
 
     // 检查所有商品是否还有库存
+    if (outOfStockItems.length > 0) {
+      const outOfStockNames = outOfStockItems.map(itemId => {
+        const item = products.find(product => product._id === itemId);
+        return item ? item.name : 'Unknown item';
+      }).join(', ');
+
+      setErrorMessage(`Cannot checkout: ${outOfStockNames} ${outOfStockItems.length > 1 ? 'are' : 'is'} out of stock`);
+
+      // Ask if user wants to remove out-of-stock items and continue with available items
+      if (window.confirm('Would you like to remove out-of-stock items and continue with available items?')) {
+        // Remove out-of-stock items
+        outOfStockItems.forEach(itemId => {
+          removeItemCompletely(itemId);
+        });
+        // Redirect to categories to find replacements
+        navigate('/menu/popular');
+      }
+      return;
+    }
+
+    // Check if requested quantities exceed available stock
+    const insufficientStockItems = [];
+
     for (const itemId in cartItems) {
       const item = products.find(product => product._id === itemId);
-      if (!item || !item.isInStock) {
-        setErrorMessage('Some items are no longer in stock');
-        return;
+      if (item && item.countInStock < cartItems[itemId]) {
+        insufficientStockItems.push({
+          name: item.name,
+          requested: cartItems[itemId],
+          available: item.countInStock
+        });
       }
+    }
+
+    if (insufficientStockItems.length > 0) {
+      const itemsMessage = insufficientStockItems.map(item =>
+        `${item.name} (requested: ${item.requested}, available: ${item.available})`
+      ).join(', ');
+
+      setErrorMessage(`Insufficient stock for: ${itemsMessage}`);
+
+      return;
     }
 
     // 如果所有检查都通过，跳转到结账页面
@@ -226,6 +282,11 @@ const Cart = () => {
         <div className="cart-header">
           <h2>Shopping Cart</h2>
         </div>
+        {errorMessage && (
+          <div className="error-message">
+            {errorMessage}
+          </div>
+        )}
         <div className="clear-button-container">
           <button
             className={Object.keys(cartItems).length === 0 ? "disabled" : ""}
@@ -240,12 +301,16 @@ const Cart = () => {
         </div>
         <br />
         <hr />
-        {products.map((item, index) => {
+        {products && products.length > 0 && products.map((item, index) => {
           if (cartItems[item._id] > 0) {
+            const isOutOfStock = !item.isInStock;
             return (<div key={item._id}>
-              <div className="cart-items-title cart-items-item">
-                <img src={item.imageUrl} alt="" />
-                <p>{item.name}</p>
+              <div className={`cart-items-title cart-items-item ${isOutOfStock ? 'out-of-stock' : ''}`}>
+                <img src={getProductImage(item.imageUrl)} alt="" />
+                <div style={{ maxWidth: 'none', textAlign: 'left' }}>
+                  <p>{item.name}</p>
+                  {isOutOfStock && <span style={{ color: 'red', display: 'block', fontSize: '0.8rem' }}>Out of Stock</span>}
+                </div>
                 <p>${item.price}</p>
                 <div className="cart-quantity-controls">
                   <button onClick={() => handleRemoveFromCart(item._id)}>-</button>
@@ -265,7 +330,7 @@ const Cart = () => {
                   </div>
                   <button
                     onClick={() => handleAddToCart(item._id)}
-                    disabled={cartItems[item._id] >= MAX_QUANTITY}
+                    disabled={cartItems[item._id] >= MAX_QUANTITY || isOutOfStock}
                   >+</button>
                 </div>
                 <p>${(item.price * cartItems[item._id]).toFixed(2)}</p>
@@ -287,10 +352,9 @@ const Cart = () => {
             <hr />
             <div className="cart-total-details"><b>Total</b><b>${(Math.round((getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 5) * 100) / 100).toFixed(2)}</b></div>
           </div>
-          {errorMessage && <p className="error-message">{errorMessage}</p>}
           <button
-            className={getTotalCartAmount() === 0 ? "disabled" : ""}
-            disabled={getTotalCartAmount() === 0}
+            className={getTotalCartAmount() === 0 || outOfStockItems.length > 0 ? "disabled" : ""}
+            disabled={getTotalCartAmount() === 0 || outOfStockItems.length > 0}
             onClick={handleCheckout}
           >
             PROCEED TO CHECKOUT

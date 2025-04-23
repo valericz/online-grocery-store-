@@ -4,7 +4,7 @@ import { StoreContext } from '../../Context/StoreContext'
 import FoodItem from '../../components/FoodItem/FoodItem'
 
 const Categories = () => {
-    const { products, loading, error } = useContext(StoreContext);
+    const { products, loading, error, getProductImage } = useContext(StoreContext);
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -20,7 +20,7 @@ const Categories = () => {
                         name={item.name}
                         price={item.price}
                         desc={item.description}
-                        image={item.imageUrl}
+                        image={getProductImage(item.imageUrl)}
                         in_stock={item.isInStock}
                     />
                 ))}
