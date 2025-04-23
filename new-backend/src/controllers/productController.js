@@ -5,7 +5,10 @@ const Product = require('../models/Product');
 // @access  Public
 const getProducts = async (req, res) => {
     try {
-        const products = await Product.find({});
+        // 检查是否有category查询参数
+        const categoryFilter = req.query.category ? { category: req.query.category } : {};
+
+        const products = await Product.find(categoryFilter);
         res.json(products);
     } catch (error) {
         console.error(error);
@@ -25,6 +28,20 @@ const getProductById = async (req, res) => {
         } else {
             res.status(404).json({ message: '产品未找到' });
         }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: '服务器错误' });
+    }
+};
+
+// @desc    获取所有产品类别
+// @route   GET /api/products/categories
+// @access  Public
+const getProductCategories = async (req, res) => {
+    try {
+        // 使用distinct获取所有唯一的类别
+        const categories = await Product.distinct('category');
+        res.json(categories);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: '服务器错误' });
@@ -54,4 +71,9 @@ const checkProductStock = async (req, res) => {
     }
 };
 
-module.exports = { getProducts, getProductById, checkProductStock };
+module.exports = {
+    getProducts,
+    getProductById,
+    getProductCategories,
+    checkProductStock
+};

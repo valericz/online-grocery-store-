@@ -93,24 +93,24 @@ const MyOrders = () => {
                   </thead>
                   <tbody>
                     {order.items.map((item) => (
-                      <tr key={item.food_id || item._id}>
+                      <tr key={item.productId || item._id}>
                         <td className="item-info">
                           <div className="item-image">
-                            <img src={getProductImage(item.food_image || item.imageUrl)} alt={item.food_name || item.name} />
+                            <img src={getProductImage(item.image)} alt={item.name} />
                           </div>
                           <div className="item-details">
-                            <p className="item-name">{item.food_name || item.name}</p>
-                            <p className="item-category">{item.food_category || item.category}</p>
+                            <p className="item-name">{item.name}</p>
+                            <p className="item-category">{item.category}</p>
                           </div>
                         </td>
                         <td className="item-quantity" data-label="Quantity">
                           {item.quantity}
                         </td>
                         <td className="item-price" data-label="Price">
-                          {formatCurrency(item.food_price || item.price)}
+                          {formatCurrency(item.price)}
                         </td>
                         <td className="item-subtotal" data-label="Subtotal">
-                          {formatCurrency((item.food_price || item.price) * item.quantity)}
+                          {formatCurrency(item.price * item.quantity)}
                         </td>
                       </tr>
                     ))}

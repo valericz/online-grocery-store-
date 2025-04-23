@@ -18,6 +18,7 @@ const StoreContextProvider = (props) => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [userCredentials, setUserCredentials] = useState([]);
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const MAX_QUANTITY = 10;
@@ -67,6 +68,35 @@ const StoreContextProvider = (props) => {
 
         fetchProducts();
     }, []);
+
+    // Fetch categories from API
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                console.log('Fetching categories from API...');
+                const response = await fetch('http://localhost:3000/api/products/categories');
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch categories: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('Categories fetched successfully:', data);
+                setCategories(data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+                // 如果无法获取分类，我们可以从产品中提取
+                if (products.length > 0) {
+                    const uniqueCategories = [...new Set(products.map(product => product.category))];
+                    setCategories(uniqueCategories);
+                }
+            }
+        };
+
+        if (!loading && products.length > 0) {
+            fetchCategories();
+        }
+    }, [products, loading]);
 
     // Load cart items, orders, and user credentials from localStorage on component mount
     useEffect(() => {
@@ -248,12 +278,11 @@ const StoreContextProvider = (props) => {
                 });
             } else {
                 orderItems.push({
-                    food_id: item._id,
+                    productId: item._id,
                     name: item.name,
-                    imageUrl: item.imageUrl,
+                    image: item.imageUrl,
                     price: item.price,
                     quantity: cartItems[itemId],
-                    category: item.category
                 });
                 totalAmount += item.price * cartItems[itemId];
             }
@@ -283,6 +312,12 @@ const StoreContextProvider = (props) => {
         const finalTotalAmount = totalAmount + 5;
 
         try {
+            // 添加完整的用户信息到请求中
+            const userInfo = user || {
+                email: deliveryData.email || 'guest@example.com',
+                name: `${deliveryData.firstName} ${deliveryData.lastName}` || 'Guest User'
+            };
+
             // Create order in backend
             const response = await fetch('http://localhost:3000/api/orders', {
                 method: 'POST',
@@ -290,6 +325,7 @@ const StoreContextProvider = (props) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    user: userInfo,
                     items: orderItems,
                     deliveryData,
                     totalAmount: finalTotalAmount
@@ -317,12 +353,12 @@ const StoreContextProvider = (props) => {
 
             // Create a frontend order object with the backend order data
             const order = {
-                id: responseData.order._id,
+                id: responseData._id,
                 items: orderItems,
                 totalAmount: finalTotalAmount, // Including delivery fee
                 deliveryData,
-                date: responseData.order.date,
-                status: responseData.order.status,
+                date: responseData.date || responseData.createdAt,
+                status: responseData.status,
                 userEmail: user?.email // Use the logged-in user's email
             };
 
@@ -447,7 +483,8 @@ const StoreContextProvider = (props) => {
         clearCart,
         loading,
         error,
-        getProductImage
+        getProductImage,
+        categories
     };
 
     return (

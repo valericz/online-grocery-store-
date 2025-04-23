@@ -32,14 +32,21 @@ app.get('/', (req, res) => {
     res.json({ message: 'Welcome to Grocery Shop API' });
 });
 
-// 导入产品路由
+// 导入路由
 const productRoutes = require('./routes/productRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 // 添加产品路由，带有日志
 app.use('/api/products', (req, res, next) => {
     console.log(`Product API request: ${req.method} ${req.url}`);
     next();
 }, productRoutes);
+
+// 添加订单路由，带有日志
+app.use('/api/orders', (req, res, next) => {
+    console.log(`Order API request: ${req.method} ${req.url}`);
+    next();
+}, orderRoutes);
 
 // 通配符路由处理404
 app.all('*', (req, res) => {

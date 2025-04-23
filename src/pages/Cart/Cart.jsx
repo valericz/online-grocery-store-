@@ -306,7 +306,7 @@ const Cart = () => {
             const isOutOfStock = !item.isInStock;
             return (<div key={item._id}>
               <div className={`cart-items-title cart-items-item ${isOutOfStock ? 'out-of-stock' : ''}`}>
-                <img src={getProductImage(item.imageUrl)} alt="" />
+                <img src={getProductImage(item.imageUrl)} alt={item.name} />
                 <div style={{ maxWidth: 'none', textAlign: 'left' }}>
                   <p>{item.name}</p>
                   {isOutOfStock && <span style={{ color: 'red', display: 'block', fontSize: '0.8rem' }}>Out of Stock</span>}
